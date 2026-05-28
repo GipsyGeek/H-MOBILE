@@ -1,39 +1,48 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
-import { ProductCard } from '@/components/products/product-card'
-import { products, categories } from '@/lib/products'
-import { cn } from '@/lib/utils'
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { ProductCard } from "@/components/products/product-card";
+import { products, categories } from "@/lib/products";
+import { cn } from "@/lib/utils";
 
-export default function ShopPage() {
-  const searchParams = useSearchParams()
-  const categoryParam = searchParams.get('category')
-  const [selectedCategory, setSelectedCategory] = useState(categoryParam || 'All')
-  const [sortBy, setSortBy] = useState('featured')
+// 1. Move the interactive shop logic into its own component
+function ShopContent() {
+  const searchParams = useSearchParams();
+  const categoryParam = searchParams.get("category");
+  const [selectedCategory, setSelectedCategory] = useState(
+    categoryParam || "All",
+  );
+  const [sortBy, setSortBy] = useState("featured");
 
   useEffect(() => {
     if (categoryParam) {
-      setSelectedCategory(categoryParam)
+      setSelectedCategory(categoryParam);
     }
-  }, [categoryParam])
+  }, [categoryParam]);
 
-  let filteredProducts = products
-  if (selectedCategory !== 'All') {
-    filteredProducts = products.filter((p) => p.category === selectedCategory)
+  let filteredProducts = products;
+  if (selectedCategory !== "All") {
+    filteredProducts = products.filter((p) => p.category === selectedCategory);
   }
 
   // Sort products
   switch (sortBy) {
-    case 'price-low':
-      filteredProducts = [...filteredProducts].sort((a, b) => a.price - b.price)
-      break
-    case 'price-high':
-      filteredProducts = [...filteredProducts].sort((a, b) => b.price - a.price)
-      break
-    case 'name':
-      filteredProducts = [...filteredProducts].sort((a, b) => a.name.localeCompare(b.name))
-      break
+    case "price-low":
+      filteredProducts = [...filteredProducts].sort(
+        (a, b) => a.price - b.price,
+      );
+      break;
+    case "price-high":
+      filteredProducts = [...filteredProducts].sort(
+        (a, b) => b.price - a.price,
+      );
+      break;
+    case "name":
+      filteredProducts = [...filteredProducts].sort((a, b) =>
+        a.name.localeCompare(b.name),
+      );
+      break;
   }
 
   return (
@@ -44,7 +53,8 @@ export default function ShopPage() {
           Shop
         </h1>
         <p className="mt-4 text-muted-foreground">
-          Discover our complete collection of premium mobile phones and accessories
+          Discover our complete collection of premium mobile phones and
+          accessories
         </p>
       </div>
 
@@ -60,7 +70,7 @@ export default function ShopPage() {
                 "px-4 py-2 text-sm font-medium transition-colors",
                 selectedCategory === category
                   ? "bg-primary text-primary-foreground"
-                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80",
               )}
             >
               {category}
@@ -89,7 +99,8 @@ export default function ShopPage() {
 
       {/* Results count */}
       <p className="text-sm text-muted-foreground mb-6">
-        Showing {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
+        Showing {filteredProducts.length}{" "}
+        {filteredProducts.length === 1 ? "product" : "products"}
       </p>
 
       {/* Product Grid */}
@@ -108,5 +119,22 @@ export default function ShopPage() {
         </div>
       )}
     </div>
-  )
+  );
+}
+
+// 2. Keep the primary page export clean and safely wrapped in Suspense
+export default function ShopPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <p className="text-muted-foreground animate-pulse">
+            Loading collection...
+          </p>
+        </div>
+      }
+    >
+      <ShopContent />
+    </Suspense>
+  );
 }
